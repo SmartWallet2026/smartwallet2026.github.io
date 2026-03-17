@@ -16,7 +16,7 @@ def call_gemini(prompt: str) -> str:
         raise RuntimeError("GEMINI_API_KEY is not set.")
         
     genai.configure(api_key=GEMINI_API_KEY, transport='rest')
-    model = genai.GenerativeModel("gemini-1.5-flash-latest")
+    model = genai.GenerativeModel("gemini-1.5-flash")
     
     for attempt in range(5):
         try:
