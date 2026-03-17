@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import os, json, random, re, datetime, time, urllib.request
 
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "").strip()
 SITE_URL       = "https://smartwallet2026.github.io"
 AUTHOR         = "Alex Morgan"
 ADSENSE_ID     = "ca-pub-7508482110287286"
@@ -9,10 +9,7 @@ POSTS_DIR      = "posts"
 TOPICS_FILE    = "post_topics.json"
 
 def call_gemini(prompt, retries=4):
-    url = (
-        "https://generativelanguage.googleapis.com/v1beta/models/"
-        f"gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
-    )
+    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash-latest:generateContent?key={GEMINI_API_KEY}"
     body = json.dumps({
         "contents": [{"parts": [{"text": prompt}]}],
         "generationConfig": {"temperature": 0.7, "maxOutputTokens": 3000}
@@ -224,4 +221,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
