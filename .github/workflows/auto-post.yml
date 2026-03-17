@@ -28,7 +28,7 @@ jobs:
       - name: Generate new blog post
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-        run: python generate_post_sdk.py
+        run: python generate_post.py
 
       - name: Update sitemap.xml
         run: python update_sitemap.py
