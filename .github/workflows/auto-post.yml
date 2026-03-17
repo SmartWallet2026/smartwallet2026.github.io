@@ -10,21 +10,29 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
       - name: Generate new blog post
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: python generate_post.py
+
       - name: Update sitemap.xml
         run: python update_sitemap.py
+
       - name: Commit and push new post
         run: |
           git config --global user.name "SmartWallet Bot"
