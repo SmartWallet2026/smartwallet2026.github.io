@@ -9,11 +9,13 @@ POSTS_DIR      = "posts"
 TOPICS_FILE    = "post_topics.json"
 
 def call_gemini(prompt, retries=4):
-    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash-latest:generateContent?key={GEMINI_API_KEY}"
+    # USE v1beta and gemini-1.5-flash which is most stable
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
     body = json.dumps({
         "contents": [{"parts": [{"text": prompt}]}],
         "generationConfig": {"temperature": 0.7, "maxOutputTokens": 3000}
     }).encode()
+    print(f"Requesting Gemini API...")
     for attempt in range(retries):
         try:
             req = urllib.request.Request(url, data=body,
@@ -26,7 +28,11 @@ def call_gemini(prompt, retries=4):
                 wait = 30 * (2 ** attempt)
                 print(f"Rate limited. Waiting {wait}s (attempt {attempt+1}/{retries})")
                 time.sleep(wait)
+            elif e.code == 404:
+                print("Error 404: Model or Endpoint not found. Check URL and model name.")
+                raise
             else:
+                print(f"API Error {e.code}: {e.reason}")
                 raise
     raise RuntimeError("Gemini API failed after retries")
 
