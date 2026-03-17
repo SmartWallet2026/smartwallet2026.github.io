@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import os, json, random, re, datetime, time
 import google.generativeai as genai
 
@@ -10,19 +9,30 @@ def call_gemini(prompt: str) -> str:
     if not GEMINI_API_KEY:
         raise RuntimeError("GEMINI_API_KEY is not set.")
     genai.configure(api_key=GEMINI_API_KEY)
-    model = genai.GenerativeModel("gemini-1.5-flash-latest")
-    for attempt in range(5):
+    
+    models = ["gemini-1.5-flash", "gemini-1.5-flash-latest", "gemini-pro"]
+    last_err = None
+    
+    for model_name in models:
         try:
-            response = model.generate_content(prompt)
-            return response.text.strip()
+            print(f"Trying model: {model_name}")
+            model = genai.GenerativeModel(model_name)
+            # Add simple retry for rate limit inside the fallback loop
+            for attempt in range(2):
+                try:
+                    response = model.generate_content(prompt)
+                    return response.text.strip()
+                except Exception as e:
+                    if "429" in str(e):
+                        time.sleep(10)
+                        continue
+                    raise e
         except Exception as e:
-            if "429" in str(e):
-                wait = 30 * (2 ** attempt)
-                print(f"Rate limited. Waiting {wait}s...")
-                time.sleep(wait)
-            else:
-                raise e
-    raise RuntimeError("Gemini API failed after retries")
+            print(f"Model {model_name} failed: {e}")
+            last_err = e
+            continue
+            
+    raise last_err
 
 def main():
     if not os.path.exists(TOPICS_FILE):
@@ -49,7 +59,8 @@ def main():
     
     html_content = call_gemini(prompt)
     if "<body>" in html_content:
-        html_content = re.search(r"<body>(.*?)</body>", html_content, re.DOTALL).group(1)
+        match = re.search(r"<body>(.*?)</body>", html_content, re.DOTALL)
+        if match: html_content = match.group(1)
     
     if not os.path.exists(POSTS_DIR):
         os.makedirs(POSTS_DIR)
@@ -68,5 +79,5 @@ def main():
         
     print(f"Created: {filename}")
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
