@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -107,8 +108,18 @@
 
   .hero-side { display: flex; flex-direction: column; }
   .side-banner {
-    background: var(--green-dark);
-    padding: 32px 24px;
+    height: 200px;
+    overflow: hidden;
+    position: relative;
+  }
+  .side-banner img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .side-banner-overlay {
+    position: absolute; inset: 0;
+    background: rgba(8,80,65,0.65);
     display: flex; align-items: center; justify-content: center;
     text-align: center;
   }
@@ -166,16 +177,17 @@
   }
   .card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
   .card-img {
-    height: 90px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 32px;
+    height: 180px;
+    overflow: hidden;
+    position: relative;
   }
-  .c1 { background: #085041; }
-  .c2 { background: #0C447C; }
-  .c3 { background: #412402; }
-  .c4 { background: #3B6D11; }
-  .c5 { background: #633806; }
-  .c6 { background: #3C3489; }
+  .card-img img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+    display: block;
+  }
+  .card:hover .card-img img { transform: scale(1.05); }
   .card-body { padding: 16px; }
   .card-tag { font-size: 10px; font-weight: 600; color: var(--green); text-transform: uppercase; letter-spacing: 0.5px; }
   .card-title { font-size: 14px; font-weight: 500; line-height: 1.45; margin: 7px 0 9px; }
@@ -284,9 +296,12 @@
   </div>
   <div class="hero-side">
     <div class="side-banner">
-      <div>
-        <div class="big-num">$0</div>
-        <div class="big-label">Start from zero</div>
+      <img src="https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=600&q=80" alt="Personal finance">
+      <div class="side-banner-overlay">
+        <div>
+          <div class="big-num">$0</div>
+          <div class="big-label">Start from zero</div>
+        </div>
       </div>
     </div>
     <div class="side-posts">
@@ -325,7 +340,7 @@
   </div>
   <div class="cards">
     <div class="card">
-      <div class="card-img c1">💵</div>
+      <div class="card-img"><img src="https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=600&q=80" alt="Budgeting"></div>
       <div class="card-body">
         <div class="card-tag">Budgeting</div>
         <div class="card-title">How to Budget When You Live Paycheck to Paycheck</div>
@@ -334,7 +349,7 @@
       <div class="card-footer"><span class="read-time">6 min read</span><span class="card-link">Read →</span></div>
     </div>
     <div class="card">
-      <div class="card-img c2">📊</div>
+      <div class="card-img"><img src="https://images.unsplash.com/photo-1518458028785-8fbcd101ebb9?w=600&q=80" alt="Frugal living"></div>
       <div class="card-body">
         <div class="card-tag">Saving</div>
         <div class="card-title">10 Frugal Living Tips That Actually Work in 2026</div>
@@ -343,7 +358,7 @@
       <div class="card-footer"><span class="read-time">7 min read</span><span class="card-link">Read →</span></div>
     </div>
     <div class="card">
-      <div class="card-img c3">📈</div>
+      <div class="card-img"><img src="https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=600&q=80" alt="Debt free"></div>
       <div class="card-body">
         <div class="card-tag">Debt Free</div>
         <div class="card-title">How to Get Out of Debt Fast With a Low Income</div>
@@ -352,7 +367,7 @@
       <div class="card-footer"><span class="read-time">9 min read</span><span class="card-link">Read →</span></div>
     </div>
     <div class="card">
-      <div class="card-img c4">🌱</div>
+      <div class="card-img"><img src="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=600&q=80" alt="Investing"></div>
       <div class="card-body">
         <div class="card-tag">Investing</div>
         <div class="card-title">How to Start Investing With Just $50 a Month</div>
@@ -361,7 +376,7 @@
       <div class="card-footer"><span class="read-time">8 min read</span><span class="card-link">Read →</span></div>
     </div>
     <div class="card">
-      <div class="card-img c5">☕</div>
+      <div class="card-img"><img src="https://images.unsplash.com/photo-1565514020179-026b92b84bb6?w=600&q=80" alt="Save money"></div>
       <div class="card-body">
         <div class="card-tag">Saving</div>
         <div class="card-title">50 Small Ways to Save Money Every Single Day</div>
@@ -370,7 +385,7 @@
       <div class="card-footer"><span class="read-time">5 min read</span><span class="card-link">Read →</span></div>
     </div>
     <div class="card">
-      <div class="card-img c6">🎯</div>
+      <div class="card-img"><img src="https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=600&q=80" alt="Financial goals"></div>
       <div class="card-body">
         <div class="card-tag">Goals</div>
         <div class="card-title">How to Set Financial Goals You'll Actually Achieve</div>
