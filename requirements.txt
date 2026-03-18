@@ -1,2 +1,1 @@
-# No external packages needed.
-# generate_post.py uses only Python standard library (urllib, json, os, re...).
+
