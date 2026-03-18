@@ -1,28 +1,24 @@
 #!/usr/bin/env python3
-import os, json, random, re, datetime, time
-import google.generativeai as genai
+import os, json, random, re, datetime, time, requests
 
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "").strip()
-POSTS_DIR = "posts"
+SITE_URL = "https://smartwallet2026.github.io"
 TOPICS_FILE = "post_topics.json"
+POSTS_DIR = "posts"
 
 def call_gemini(prompt):
-    if not GEMINI_API_KEY: raise RuntimeError("API Key missing")
-    genai.configure(api_key=GEMINI_API_KEY)
-    for model_name in ["gemini-1.5-flash", "gemini-1.5-flash-latest", "gemini-pro"]:
+    key = os.environ.get("GEMINI_API_KEY", "").strip()
+    if not key: raise RuntimeError("API Key missing")
+    # Try both v1 and v1beta endpoints
+    for api_ver in ["v1", "v1beta"]:
+        url = f"https://generativelanguage.googleapis.com/{api_ver}/models/gemini-1.5-flash:generateContent?key={key}"
         try:
-            model = genai.GenerativeModel(model_name)
-            for attempt in range(3):
-                try:
-                    return model.generate_content(prompt).text.strip()
-                except Exception as e:
-                    if "429" in str(e):
-                        time.sleep(30 * (2 ** attempt))
-                    else: raise
+            resp = requests.post(url, json={"contents": [{"parts": [{"text": prompt}]}]}, timeout=60)
+            if resp.status_code == 200:
+                return resp.json()['candidates'][0]['content']['parts'][0]['text'].strip()
+            print(f"API {api_ver} failed: {resp.status_code} {resp.text}")
         except Exception as e:
-            print(f"Model {model_name} failed: {e}")
-            continue
-    raise RuntimeError("All models failed")
+            print(f"Request failed: {e}")
+    raise RuntimeError("All API attempts failed")
 
 def pick_topic():
     if not os.path.exists(TOPICS_FILE): return None
@@ -39,11 +35,15 @@ def pick_topic():
 
 def main():
     topic = pick_topic()
-    if not topic: return
-    prompt = f"Write a simple HTML blog post for: {topic['title']}. Keyword: {topic['keyword']}. Include only the body content."
+    if not topic:
+        print("No topics found")
+        return
+    print(f"Generating for: {topic['title']}")
+    prompt = f"Write a simple HTML blog post for: {topic['title']}. Keyword: {topic['keyword']}. Include only the body content inside a <div>."
     body = call_gemini(prompt)
     os.makedirs(POSTS_DIR, exist_ok=True)
     with open(os.path.join(POSTS_DIR, f"{topic['slug']}.html"), "w") as f:
-        f.write(f"<html><body>{body}</body></html>")
+        f.write(f"<!DOCTYPE html><html><body>{body}</body></html>")
+    print("Done")
 
-if __name__ == "__main__": main()
+if __name__ == '__main__': main()
