@@ -9,15 +9,20 @@ TOPICS_FILE = "post_topics.json"
 def call_gemini(prompt):
     if not GEMINI_API_KEY: raise RuntimeError("API Key missing")
     genai.configure(api_key=GEMINI_API_KEY)
-    model = genai.GenerativeModel("gemini-1.5-flash")
-    for attempt in range(5):
+    for model_name in ["gemini-1.5-flash", "gemini-1.5-flash-latest", "gemini-pro"]:
         try:
-            return model.generate_content(prompt).text.strip()
+            model = genai.GenerativeModel(model_name)
+            for attempt in range(3):
+                try:
+                    return model.generate_content(prompt).text.strip()
+                except Exception as e:
+                    if "429" in str(e):
+                        time.sleep(30 * (2 ** attempt))
+                    else: raise
         except Exception as e:
-            if "429" in str(e):
-                time.sleep(30 * (2 ** attempt))
-            else: raise
-    raise RuntimeError("Failed after retries")
+            print(f"Model {model_name} failed: {e}")
+            continue
+    raise RuntimeError("All models failed")
 
 def pick_topic():
     if not os.path.exists(TOPICS_FILE): return None
@@ -35,9 +40,10 @@ def pick_topic():
 def main():
     topic = pick_topic()
     if not topic: return
-    prompt = f"Write a simple HTML blog post for: {topic['title']}. Include only the body content."
+    prompt = f"Write a simple HTML blog post for: {topic['title']}. Keyword: {topic['keyword']}. Include only the body content."
     body = call_gemini(prompt)
     os.makedirs(POSTS_DIR, exist_ok=True)
-    with open(os.path.join(POSTS_DIR, f"{topic['slug']}.html"), "w") as f: f.write(f"<html><body>{body}</body></html>")
+    with open(os.path.join(POSTS_DIR, f"{topic['slug']}.html"), "w") as f:
+        f.write(f"<html><body>{body}</body></html>")
 
 if __name__ == "__main__": main()
