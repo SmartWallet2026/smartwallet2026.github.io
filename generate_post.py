@@ -1,36 +1,37 @@
 import os, json, random, re, datetime, time, urllib.request
 
-ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 SITE_URL  = "https://smartwallet2026.github.io"
 POSTS_DIR = "posts"
 TOPICS    = "post_topics.json"
-MODEL     = "claude-sonnet-4-20250514"
+MODEL     = "gemini-2.0-flash"
 
-def call_claude(prompt):
-    if not ANTHROPIC_API_KEY:
-        raise SystemExit("ANTHROPIC_API_KEY not set")
-    print(f"API key prefix: {ANTHROPIC_API_KEY[:12]}...")
-    url  = "https://api.anthropic.com/v1/messages"
+def call_gemini(prompt):
+    if not GEMINI_API_KEY:
+        raise SystemExit("GEMINI_API_KEY not set")
+    print(f"API key prefix: {GEMINI_API_KEY[:8]}...")
+    url = (
+        "https://generativelanguage.googleapis.com/v1beta/models/"
+        f"{MODEL}:generateContent?key={GEMINI_API_KEY}"
+    )
     body = json.dumps({
-        "model": MODEL,
-        "max_tokens": 2000,
-        "messages": [{"role": "user", "content": prompt}]
+        "contents": [{"parts": [{"text": prompt}]}],
+        "generationConfig": {"temperature": 0.7, "maxOutputTokens": 2000}
     }).encode("utf-8")
-    headers = {
-        "Content-Type": "application/json",
-        "x-api-key": ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01"
-    }
     for attempt in range(5):
         try:
-            req = urllib.request.Request(url, data=body, headers=headers, method="POST")
-            with urllib.request.urlopen(req, timeout=120) as r:
+            req = urllib.request.Request(
+                url, data=body,
+                headers={"Content-Type": "application/json"},
+                method="POST"
+            )
+            with urllib.request.urlopen(req, timeout=90) as r:
                 data = json.loads(r.read())
-            return data["content"][0]["text"].strip()
+            return data["candidates"][0]["content"]["parts"][0]["text"].strip()
         except urllib.error.HTTPError as e:
             err = e.read().decode("utf-8", errors="replace")
             print(f"HTTP {e.code}: {err[:200]}")
-            if e.code in (429, 529):
+            if e.code == 429:
                 wait = 60 * (2 ** attempt)
                 print(f"Rate limited. Waiting {wait}s (attempt {attempt+1}/5)...")
                 time.sleep(wait)
@@ -53,7 +54,7 @@ def main():
         "Use h2 headings and paragraphs. Return plain HTML body content only (no html/head/body tags). "
         "Do not include any markdown, code fences, or backticks — only raw HTML."
     )
-    content = call_claude(prompt)
+    content = call_gemini(prompt)
 
     # Strip any accidental markdown code fences
     content = re.sub(r"^```(?:html)?\s*", "", content, flags=re.MULTILINE)
