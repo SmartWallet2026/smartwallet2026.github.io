@@ -8,17 +8,25 @@ POSTS_DIR = "posts"
 def call_gemini(prompt):
     key = os.environ.get("GEMINI_API_KEY", "").strip()
     if not key: raise RuntimeError("API Key missing")
-    # Try both v1 and v1beta endpoints
+    
+    # Debug: List models
+    try:
+        models_resp = requests.get(f"https://generativelanguage.googleapis.com/v1beta/models?key={key}")
+        print(f"Models check: {models_resp.status_code}")
+        if models_resp.status_code == 200:
+            print("Available models logic...")
+    except: pass
+
     for api_ver in ["v1", "v1beta"]:
-        url = f"https://generativelanguage.googleapis.com/{api_ver}/models/gemini-1.5-flash:generateContent?key={key}"
-        try:
-            resp = requests.post(url, json={"contents": [{"parts": [{"text": prompt}]}]}, timeout=60)
-            if resp.status_code == 200:
-                return resp.json()['candidates'][0]['content']['parts'][0]['text'].strip()
-            print(f"API {api_ver} failed: {resp.status_code} {resp.text}")
-        except Exception as e:
-            print(f"Request failed: {e}")
-    raise RuntimeError("All API attempts failed")
+        for model in ["gemini-1.5-flash", "gemini-pro", "gemini-1.0-pro"]:
+            url = f"https://generativelanguage.googleapis.com/{api_ver}/models/{model}:generateContent?key={key}"
+            try:
+                resp = requests.post(url, json={"contents": [{"parts": [{"text": prompt}]}]}, timeout=60)
+                if resp.status_code == 200:
+                    return resp.json()['candidates'][0]['content']['parts'][0]['text'].strip()
+                print(f"Try {api_ver} {model}: {resp.status_code}")
+            except: continue
+    raise RuntimeError("All models failed")
 
 def pick_topic():
     if not os.path.exists(TOPICS_FILE): return None
@@ -35,15 +43,10 @@ def pick_topic():
 
 def main():
     topic = pick_topic()
-    if not topic:
-        print("No topics found")
-        return
-    print(f"Generating for: {topic['title']}")
-    prompt = f"Write a simple HTML blog post for: {topic['title']}. Keyword: {topic['keyword']}. Include only the body content inside a <div>."
-    body = call_gemini(prompt)
+    if not topic: return
+    body = call_gemini(f"Write a div-wrapped HTML personal finance blog post for: {topic['title']}")
     os.makedirs(POSTS_DIR, exist_ok=True)
     with open(os.path.join(POSTS_DIR, f"{topic['slug']}.html"), "w") as f:
         f.write(f"<!DOCTYPE html><html><body>{body}</body></html>")
-    print("Done")
 
 if __name__ == '__main__': main()
